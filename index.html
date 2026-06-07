@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Poly Match</title>
+<style>
+  body {
+    background:#222;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding-top:20px;
+    color:#eee;
+    font-family:sans-serif;
+  }
+  canvas {
+    background:#111;
+    border:4px solid #555;
+    margin-right:20px;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <h2>Poly Match</h2>
+  <p>Click one polygon, then click an adjacent polygon to swap.</p>
+  <p>Matches of 3+ clear, polygons fall, new ones spawn.</p>
+  <select id="modeSel">
+      <option value="0">Normal</option>
+      <option value="1">Poly</option>
+      <option value="2">Super</option>
+      <option value="3">Test</option>
+  </select>
+  <label style="margin-left: 10px;">
+    <input type="checkbox" id="block" checked>
+    Block
+  </label>
+  <p><span id="score"></span></p>
+</div>
+
+<canvas id="game" width="480" height="480"></canvas>
+
+<script src="animation.js"></script>
+<script src="polymatch.js"></script>
+
+</body>
+</html>
