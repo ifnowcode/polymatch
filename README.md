@@ -1,6 +1,6 @@
 # PolyMatch — A Responsive, Animated Match‑3 Engine
 
-[https://ifnowcode.github.io/polymatch/](https://ifnowcode.github.io/polymatch/)
+[https://ifnowcode.github.io/polymatch](https://ifnowcode.github.io/polymatch)
 
 PolyMatch is a fully‑animated, canvas‑based **match‑3 puzzle engine** built for the modern web.
 It features smooth falling animations, cascading matches, emoji‑powered scoring, multiple match modes, and a responsive layout that adapts to desktop and mobile automatically.
