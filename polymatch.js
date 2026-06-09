@@ -8,7 +8,10 @@ const block = document.getElementById("block");
 
 const COLS = 8;
 const ROWS = 8;
-const TILE_SIZE = canvas.width / COLS;
+let TILE_SIZE = canvas.width / COLS;
+
+const tracedebug = false;
+const tracerun = false;
 
 const COLORS = ["#ff4b5c","#ffb400","#4cd137","#00a8ff","#9b59b6"];
 const SHAPES = ["circle","square","diamond","triangle"];
@@ -17,7 +20,9 @@ const EMOJIS = ["❤️", "🖤", "🐞", "✨", "💥", "🕸️", "🔥", "⭐
 let stats = {
   score: 0,
   runs: {},
+  cascade: {},
   matches: {},
+  super: {},
   emojis: {},
   playerRuns: 0,
   cascadeRuns: 0,
@@ -58,14 +63,14 @@ function drawEmoji(emoji, x, y) {
   const cx = x + TILE_SIZE / 2;
   const cy = y + TILE_SIZE / 2;
   
-  ctx.globalAlpha = 0.8;
+  //ctx.globalAlpha = 0.8;
 
   ctx.font = `${TILE_SIZE * 0.5}px sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(emoji, cx, cy);
   
-  ctx.globalAlpha = 1.0;
+  //ctx.globalAlpha = 1.0;
 }
 
 function drawPolygon(polygon, x, y) {
@@ -157,11 +162,11 @@ function getMatches() {
 }
 
 function removeAllMatches(initialFill = false) {
-  console.log("removeAllMatches switchboard entry");
+  if (tracedebug) console.log("removeAllMatches switchboard entry");
   switch (modeSel.value) {
     case "0":
       let result = removeAllMatches_00(initialFill);
-      console.log("removeAllMatches switchboard exit");
+      if (tracedebug) console.log("removeAllMatches switchboard exit");
       return result;
     case "1": return removeAllMatches_01(initialFill);
     case "2": return removeAllMatches_02(initialFill);
@@ -431,7 +436,7 @@ function scoreRun(len) {
 }
 
 function runIsAllSameColor(m) {
-  //console.log("RUN SCORE check:", m);
+  if (tracerun) console.log("RUN SCORE check:", m);
   if (!m.cells || m.cells.length === 0) return false;
 
   const first = grid[m.cells[0].r][m.cells[0].c];
@@ -504,7 +509,7 @@ async function removeAllPieces() {
 async function removeAllMatches_00(initialFill = false) {
   busy = true;
   let totalRemoved = 0;
-  console.log("removeAllMatches enter", initialFill);
+  if (tracedebug) console.log("removeAllMatches enter", initialFill);
 
   while (true) {
     const matches = getMatches_00();
@@ -539,7 +544,7 @@ async function removeAllMatches_00(initialFill = false) {
     scoreEl.textContent = stats.score;
   }
 
-  console.log("removeAllMatches exit", initialFill);
+  if (tracedebug) console.log("removeAllMatches exit", initialFill);
   busy = false;
 }
 
@@ -556,7 +561,7 @@ async function removeAllMatches_02(initialFill = false) {
     for (let m of matches) {
       if (m.isSuper) {
         // SUPER MATCH: remove ALL polygons of same color+shape
-        console.log("Super match!");
+        if (tracerun) console.log("Super match!");
         for (let r = 0; r < ROWS; r++) {
           for (let c = 0; c < COLS; c++) {
             const polygon = grid[r][c];
@@ -672,22 +677,25 @@ async function removeAllMatches_03(initialFill = false) {
       if (!initialFill)  {
         if (!stats.runs[len]) stats.runs[len] = 0;
         stats.runs[len]++;
-
         // Add score for this run
-        console.log("Cascade", isCascade);
+        if (tracerun) console.log("Cascade", isCascade);
         if (runIsAllSameColor(m) && !isCascade) {
           stats.score += scoreRun(len) * 10;
-          console.log("SCORE: BONUS! Player run all same color!", len, scoreRun(len) * 10)
-          if (!stats.matches[len]) stats.matches[len] = 0;
-          stats.matches[len]++;
-          console.log("SCORE Matches:", stats.matches);
+          if (tracerun) console.log("SCORE: BONUS! Player run all same color!", len, scoreRun(len) * 10)
+          if (!stats.super[len]) stats.super[len] = 0;
+          stats.super[len]++;
+          if (tracedebug) console.log("SCORE Matches:", stats.matches);
         } else if (!isCascade) {
           stats.score += scoreRun(len) * 3;
-          console.log("SCORE: Player run is!", len, scoreRun(len) * 3)
+          if (tracerun) console.log("SCORE: Player run is!", len, scoreRun(len) * 3)
+          if (!stats.matches[len]) stats.matches[len] = 0;
+          stats.matches[len]++;
         } else {
           let tally = scoreRun(len) * 3;
           stats.score += tally;
-          console.log("SCORE: Cascade run is!", len, tally)
+          if (tracerun) console.log("SCORE: Cascade run is!", len, tally)
+          if (!stats.cascade[len]) stats.cascade[len] = 0;
+          stats.cascade[len]++;
         }
       }
 
@@ -709,22 +717,22 @@ async function removeAllMatches_03(initialFill = false) {
           stats.emojis[poly.emoji]++;
           let tally = scoreEmoji(poly.emoji);
           stats.score += tally;
-          console.log("SCORE: Emoji tally is", tally);
+          if (tracedebug) console.log("SCORE: Emoji tally is", tally);
         }
       }
     }
     
     // Track whether this match is player or cascade
     if (isCascade) {
-      console.log("Cascading");
+      if (tracerun) console.log("Cascading");
       stats.cascadeRuns++;
     } else {
-      console.log("Player run");
+      if (tracerun) console.log("Player run");
       stats.playerRuns++;
       isCascade = true; // all future loops are cascades
     }
     
-    //console.log("STATS:", stats);
+    if (tracedebug) console.log("STATS:", stats);
 
     if (!initialFill && toRemove.length > 0) {
       await AnimationSystem.play("vaporize", toRemove, { duration: 300 });
@@ -875,11 +883,11 @@ canvas.addEventListener("click", e => {
 });
 
 window.addEventListener("keydown", e => {
-  //console.log("Keydown", e.key);
+  if (tracedebug) console.log("Keydown", e.key);
   if (block.checked && busy) return;
 
   if (e.key === "k" || e.key === "K") {
-    console.log("BOOM!");
+    if (tracedebug) console.log("BOOM!");
     removeAllPieces();
   }
 
@@ -906,7 +914,7 @@ function renderStats() {
     html += `<div style="opacity: 0.6;">No runs yet</div>`;
   } else {
     for (let len in stats.runs) {
-      html += `<div>Match of ${len}: ${stats.runs[len]} / ${stats.matches[len] ?? 0}</div>`;
+      html += `<div>Match of ${len}: ${stats.runs[len]} (${stats.super[len] ?? 0} / ${stats.matches[len] ?? 0} / ${stats.cascade[len] ?? 0}) </div>`;
     }
   }
 
@@ -953,5 +961,43 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+function resizeGame() {
+  // 1. Read CSS pixel size (stable because CSS controls it)
+  const rect = canvas.getBoundingClientRect();
+  const cssSize = rect.width; // square board
+  const dpr = window.devicePixelRatio || 1;
+
+  // 2. Compute internal resolution
+  const internalSize = Math.floor(cssSize * dpr);
+
+  // 3. Only update if needed (prevents feedback loops)
+  if (canvas.width !== internalSize || canvas.height !== internalSize) {
+    canvas.width = internalSize;
+    canvas.height = internalSize;
+  }
+
+  // 4. Reset transform and scale to match DPR
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+
+  // 5. Recompute TILE_SIZE based on CSS pixels
+  TILE_SIZE = cssSize / COLS;
+
+  // 6. Snap falling pieces to new scale
+  for (let f of falling) {
+    f.startY = f.r * TILE_SIZE;
+    f.endY = f.r * TILE_SIZE;
+    f.y = f.r * TILE_SIZE;
+  }
+
+  // 7. Redraw
+  drawGrid();
+}
+
+
+window.addEventListener("resize", resizeGame);
+
+
 createGrid();
+resizeGame(); // initial call
 loop();
